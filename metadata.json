@@ -1,0 +1,5 @@
+{
+  "name": "GreenBot",
+  "description": "A chat application powered by the Gemini API, created for GreenGamesStudio. It features a ChatGPT-like interface with a green theme, chat history, and streaming responses.",
+  "requestFramePermissions": []
+}
