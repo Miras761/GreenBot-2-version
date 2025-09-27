@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat } from "@google/genai";
-import { Message, Role } from '../types';
+import { Message } from '../types';
 
 let ai: GoogleGenAI | null = null;
 let chat: Chat | null = null;
@@ -43,7 +43,6 @@ export const clearChatSession = (): void => {
 
 export const streamChatResponse = async (
     prompt: string,
-    history: Message[],
     onChunk: (chunk: string) => void,
     onError: (error: string) => void
 ): Promise<void> => {

@@ -1,5 +1,3 @@
-
-import React from 'react';
 import ChatInput from './components/ChatInput';
 import ChatWindow from './components/ChatWindow';
 import Sidebar from './components/Sidebar';

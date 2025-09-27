@@ -60,9 +60,7 @@ export const useChat = () => {
     };
 
     try {
-      // The `history` parameter is not used by the geminiService because the Chat object is stateful.
-      // Passing an empty array allows us to remove the `messages` dependency from `useCallback`.
-      await streamChatResponse(prompt, [], onChunk, onError);
+      await streamChatResponse(prompt, onChunk, onError);
     } finally {
       setIsLoading(false);
     }
