@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat } from "@google/genai";
 import { Message, Role } from '../types';
 
@@ -53,8 +52,7 @@ export const streamChatResponse = async (
         
         // Note: The gemini 'Chat' object maintains its own history. 
         // We don't need to pass the full history on every call if we reuse the chat object.
-        // However, if we re-initialize chat for every session (like with `clearChatSession`),
-        // this is where we would inject the history. For this implementation, we rely on the stateful `Chat` object.
+        // For this implementation, we rely on the stateful `Chat` object.
 
         const responseStream = await currentChat.sendMessageStream({ message: prompt });
         
@@ -71,18 +69,25 @@ export const streamChatResponse = async (
         console.error("Error streaming chat response:", error);
 
         let userFriendlyMessage = "Sorry, something went wrong. Please try again later.";
-
+        
+        let errorMessage = '';
         if (error instanceof Error) {
-            const message = error.message;
+            errorMessage = error.message;
+        } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+            errorMessage = (error as any).message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
+        }
 
-            // Provide specific, user-friendly messages for common errors.
-            if (message.includes('API key not valid') || message.includes('invalid api key')) {
+        if (errorMessage) {
+            const lowerCaseMessage = errorMessage.toLowerCase();
+            if (lowerCaseMessage.includes('api key not valid')) {
                 userFriendlyMessage = "The API key is not valid. Please check your project settings and ensure the key is correct and has not expired.";
-            } else if (message.includes('quota')) {
+            } else if (lowerCaseMessage.includes('quota')) {
                 userFriendlyMessage = "You have exceeded your API quota. Please check your usage and billing information.";
-            } else if (message.includes('400')) { // Bad Request can be due to many things, including safety filters
+            } else if (lowerCaseMessage.includes('400')) { // Bad Request can be due to many things, including safety filters
                 userFriendlyMessage = "Your request was blocked. This may be due to safety settings or an invalid prompt. Please try rephrasing.";
-            } else if (message.includes('500') || message.includes('503')) { // Server errors
+            } else if (lowerCaseMessage.includes('500') || lowerCaseMessage.includes('503')) { // Server errors
                 userFriendlyMessage = "The AI service is temporarily unavailable. Please try again in a few moments.";
             }
         }

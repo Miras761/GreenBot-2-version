@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Message, Role } from '../types';
 import { streamChatResponse, clearChatSession } from '../services/geminiService';
@@ -46,12 +45,9 @@ export const useChat = () => {
 
     const onChunk = (chunk: string) => {
       setMessages(prev => {
-        const newMessages = [...prev];
-        // Update the last message in the array, which is the bot's streaming response
-        if (newMessages.length > 0) {
-            newMessages[newMessages.length - 1] = { role: Role.Model, content: chunk };
-        }
-        return newMessages;
+        // Replace the last message (the bot's response) with the updated content.
+        // This is a safer, immutable update pattern.
+        return [...prev.slice(0, -1), { role: Role.Model, content: chunk }];
       });
     };
 
@@ -59,16 +55,17 @@ export const useChat = () => {
         const errorMessage: Message = { role: Role.Error, content: error };
         setMessages(prev => {
             // Replace the bot placeholder with the error message
-            const newMessages = [...prev.slice(0, -1), errorMessage];
-            return newMessages;
+            return [...prev.slice(0, -1), errorMessage];
         });
     };
 
-    // The `history` parameter is not used by the geminiService because the Chat object is stateful.
-    // Passing an empty array allows us to remove the `messages` dependency from `useCallback`.
-    await streamChatResponse(prompt, [], onChunk, onError);
-    
-    setIsLoading(false);
+    try {
+      // The `history` parameter is not used by the geminiService because the Chat object is stateful.
+      // Passing an empty array allows us to remove the `messages` dependency from `useCallback`.
+      await streamChatResponse(prompt, [], onChunk, onError);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
   
   return { messages, isLoading, sendMessage, handleNewChat };
