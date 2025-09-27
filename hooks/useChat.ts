@@ -38,20 +38,19 @@ export const useChat = () => {
   const sendMessage = useCallback(async (prompt: string) => {
     if (!prompt) return;
 
-    const userMessage: Message = { role: Role.User, content: prompt };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
     setIsLoading(true);
-
-    let currentBotMessage = '';
-    const botMessagePlaceholder: Message = { role: Role.Model, content: '' };
-    setMessages(prev => [...prev, botMessagePlaceholder]);
+    const userMessage: Message = { role: Role.User, content: prompt };
+    
+    // Add user message and a placeholder for the bot's response in a single state update
+    setMessages(prev => [...prev, userMessage, { role: Role.Model, content: '' }]);
 
     const onChunk = (chunk: string) => {
-      currentBotMessage = chunk;
       setMessages(prev => {
         const newMessages = [...prev];
-        newMessages[newMessages.length - 1] = { role: Role.Model, content: currentBotMessage };
+        // Update the last message in the array, which is the bot's streaming response
+        if (newMessages.length > 0) {
+            newMessages[newMessages.length - 1] = { role: Role.Model, content: chunk };
+        }
         return newMessages;
       });
     };
@@ -65,10 +64,12 @@ export const useChat = () => {
         });
     };
 
-    await streamChatResponse(prompt, updatedMessages, onChunk, onError);
+    // The `history` parameter is not used by the geminiService because the Chat object is stateful.
+    // Passing an empty array allows us to remove the `messages` dependency from `useCallback`.
+    await streamChatResponse(prompt, [], onChunk, onError);
     
     setIsLoading(false);
-  }, [messages]);
+  }, []);
   
   return { messages, isLoading, sendMessage, handleNewChat };
 };

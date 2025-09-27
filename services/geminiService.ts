@@ -67,14 +67,26 @@ export const streamChatResponse = async (
             }
         }
     } catch (error) {
+        // Log the full error for debugging purposes
         console.error("Error streaming chat response:", error);
-        let errorMessage = "An unknown error occurred.";
+
+        let userFriendlyMessage = "Sorry, something went wrong. Please try again later.";
+
         if (error instanceof Error) {
-            errorMessage = `Sorry, I ran into an error: ${error.message}`;
-             if (error.message.includes('API key not valid')) {
-                errorMessage = "The API key is invalid or not configured correctly in Vercel project settings.";
+            const message = error.message;
+
+            // Provide specific, user-friendly messages for common errors.
+            if (message.includes('API key not valid') || message.includes('invalid api key')) {
+                userFriendlyMessage = "The API key is not valid. Please check your project settings and ensure the key is correct and has not expired.";
+            } else if (message.includes('quota')) {
+                userFriendlyMessage = "You have exceeded your API quota. Please check your usage and billing information.";
+            } else if (message.includes('400')) { // Bad Request can be due to many things, including safety filters
+                userFriendlyMessage = "Your request was blocked. This may be due to safety settings or an invalid prompt. Please try rephrasing.";
+            } else if (message.includes('500') || message.includes('503')) { // Server errors
+                userFriendlyMessage = "The AI service is temporarily unavailable. Please try again in a few moments.";
             }
         }
-        onError(errorMessage);
+        
+        onError(userFriendlyMessage);
     }
 };
