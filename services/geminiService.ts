@@ -1,5 +1,4 @@
 import { GoogleGenAI, Chat } from "@google/genai";
-import { Message } from '../types';
 
 let ai: GoogleGenAI | null = null;
 let chat: Chat | null = null;
